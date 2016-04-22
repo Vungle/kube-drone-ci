@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: drone-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: drone
+    spec:
+      containers:
+      - name: drone
+        image: drone/drone:0.4.1
+        ports:
+        - containerPort: 8000
+        env:
+        - name: REMOTE_DRIVER
+          value: github
+        - name: REMOTE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              name: "drone-secrets"
+              key: remote-config
+        - name: DATABASE_DRIVER
+          value: postgres
+        - name: DATABASE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              name: "drone-secrets"
+              key: database-config
+        volumeMounts:
+        - name: dockersocket
+          mountPath: /var/run/docker.sock
+      volumes:
+      - name: dockersocket
+        hostPath:
+          path: /var/run/docker.sock
